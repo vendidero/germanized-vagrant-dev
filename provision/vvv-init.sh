@@ -60,6 +60,9 @@ localize_wp() {
   noroot wp site switch-language de_DE
 
   noroot wp plugin install wordpress-importer --activate
+
+  noroot wp user meta update 1 "billing_country" "DE"
+  noroot wp user meta update 1 "shipping_country" "DE"
 }
 
 configure_woo() {
