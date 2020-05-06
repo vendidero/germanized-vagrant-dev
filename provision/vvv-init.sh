@@ -66,7 +66,6 @@ configure_woo() {
   echo " * Configuring Woo"
   noroot wp plugin activate woocommerce
   noroot wp language plugin install woocommerce de_DE
-  noroot wp plugin activate woocommerce-disable-wc-admin
   noroot wp option update woocommerce_tax_total_display itemized
   noroot wp option update woocommerce_default_country DE
   noroot wp option update woocommerce_currency EUR
@@ -228,12 +227,13 @@ setup_nginx_folders
 
 cd "${VVV_PATH_TO_SITE}/public_html"
 
-
+FORCE_RESET_WP=$(get_config_value 'force_reset_wp' "")
 
 if [ "${WP_TYPE}" == "none" ]; then
   echo " * wp_type was set to none, provisioning WP was skipped, moving to Nginx configs"
 else
   echo " * Install type is '${WP_TYPE}'"
+  
   # Install and configure the latest stable version of WordPress
   if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/wp-load.php" ]]; then
     download_wordpress "${VVV_PATH_TO_SITE}/public_html" "${WP_VERSION}" "${WP_LOCALE}"
@@ -243,17 +243,24 @@ else
     initial_wpconfig
   fi
 
-  if ! $(noroot wp core is-installed ); then
-    echo " * WordPress is present but isn't installed to the database, checking for SQL dumps in wp-content/database.sql or the main backup folder."
-    if [ -f "${VVV_PATH_TO_SITE}/public_html/wp-content/database.sql" ]; then
-      restore_db_backup "${VVV_PATH_TO_SITE}/public_html/wp-content/database.sql"
-    elif [ -f "/srv/database/backups/${VVV_SITE_NAME}.sql" ]; then
-      restore_db_backup "/srv/database/backups/${VVV_SITE_NAME}.sql"
-    else
-      install_wp
-    fi
+  if [ ! -z "${FORCE_RESET_WP}" ]; then
+    echo " * Forced resetting WP install and database"
+    noroot wp core download --force
+    noroot wp db reset --yes
+    install_wp
   else
-    update_wp
+    if ! $(noroot wp core is-installed ); then
+      echo " * WordPress is present but isn't installed to the database, checking for SQL dumps in wp-content/database.sql or the main backup folder."
+      if [ -f "${VVV_PATH_TO_SITE}/public_html/wp-content/database.sql" ]; then
+        restore_db_backup "${VVV_PATH_TO_SITE}/public_html/wp-content/database.sql"
+      elif [ -f "/srv/database/backups/${VVV_SITE_NAME}.sql" ]; then
+        restore_db_backup "/srv/database/backups/${VVV_SITE_NAME}.sql"
+      else
+        install_wp
+      fi
+    else
+      update_wp
+    fi
   fi
 fi
 
