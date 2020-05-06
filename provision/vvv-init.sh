@@ -57,7 +57,7 @@ localize_wp() {
   echo " * Localizing WP"
   noroot wp language core install de_DE
   noroot wp language core install de_DE_formal
-  noroot wp language core activate de_DE
+  noroot wp site switch-language de_DE
 
   noroot wp plugin install wordpress-importer --activate
 }
@@ -65,6 +65,11 @@ localize_wp() {
 configure_woo() {
   echo " * Configuring Woo"
   noroot wp plugin activate woocommerce
+
+  if $(noroot wp plugin is-installed woocommerce-disable-wc-admin ); then
+    noroot wp plugin activate woocommerce-disable-wc-admin
+  fi
+
   noroot wp language plugin install woocommerce de_DE
   noroot wp option update woocommerce_tax_total_display itemized
   noroot wp option update woocommerce_default_country DE
@@ -82,7 +87,7 @@ configure_woo() {
   noroot wp option update woocommerce_tax_based_on billing
   noroot wp option update woocommerce_default_customer_address base
 
-  noroot wp option update woocommerce_store_address Schillerstraße 36a
+  noroot wp option update woocommerce_store_address "Schillerstraße 36a"
   noroot wp option update woocommerce_store_city Berlin
   noroot wp option update woocommerce_store_postcode 12207
   noroot wp option delete woocommerce_admin_notices
