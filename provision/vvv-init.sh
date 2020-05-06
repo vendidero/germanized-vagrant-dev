@@ -245,7 +245,7 @@ else
 
   if [ ! -z "${FORCE_RESET_WP}" ]; then
     echo " * Forced resetting WP install and database"
-    noroot wp core download --force
+    noroot wp core download --path="${VVV_PATH_TO_SITE}/public_html" --force
     noroot wp db reset --yes
     install_wp
   else
