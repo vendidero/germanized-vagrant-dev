@@ -53,6 +53,46 @@ install_themes() {
   fi
 }
 
+localize_wp() {
+  echo " * Localizing WP"
+  noroot wp language core install de_DE
+  noroot wp language core install de_DE_formal
+  noroot wp language core activate de_DE
+
+  noroot wp plugin install wordpress-importer --activate
+}
+
+configure_woo() {
+  echo " * Configuring Woo"
+  noroot wp plugin activate woocommerce
+  noroot wp language plugin install woocommerce de_DE
+  noroot wp plugin activate woocommerce-disable-wc-admin
+  noroot wp option update woocommerce_tax_total_display itemized
+  noroot wp option update woocommerce_default_country DE
+  noroot wp option update woocommerce_currency EUR
+  noroot wp option update woocommerce_currency_pos right_space
+  noroot wp option update woocommerce_price_thousand_sep .
+  noroot wp option update woocommerce_price_decimal_sep ,
+  noroot wp option update woocommerce_price_num_decimals 2
+  noroot wp option update woocommerce_weight_unit kg
+  noroot wp option update woocommerce_dimension_unit cm
+  noroot wp option update woocommerce_calc_taxes yes
+  noroot wp option update woocommerce_prices_include_tax yes
+  noroot wp option update woocommerce_tax_display_cart incl
+  noroot wp option update woocommerce_tax_display_shop incl
+  noroot wp option update woocommerce_tax_based_on billing
+  noroot wp option update woocommerce_default_customer_address base
+
+  noroot wp option update woocommerce_store_address Schillerstraße 36a
+  noroot wp option update woocommerce_store_city Berlin
+  noroot wp option update woocommerce_store_postcode 12207
+  noroot wp option delete woocommerce_admin_notices
+  noroot wp wc tool run install_pages --user=1
+
+  echo " * Installing Woo demo content"
+  noroot wp import wp-content/plugins/woocommerce/sample-data/sample_products.xml --authors=skip --user=1
+}
+
 copy_nginx_configs() {
   echo " * Copying the sites Nginx config template"
   if [ -f "${VVV_PATH_TO_SITE}/provision/vvv-nginx-custom.conf" ]; then
@@ -221,5 +261,7 @@ copy_nginx_configs
 setup_wp_config_constants
 install_plugins
 install_themes
+localize_wp
+configure_woo
 
 echo " * Site Template provisioner script completed for ${VVV_SITE_NAME}"
